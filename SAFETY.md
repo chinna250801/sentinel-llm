@@ -6,7 +6,7 @@
 
 ## 1. What this project IS
 
-A **defender's toolkit**: guidelines, audit skills, and (per roadmap) an orchestrator CLI that help teams *find and fix* weaknesses in **their own** LLM applications, agents, and codebases — before someone else finds them.
+A **defender's toolkit**: guidelines and audit skills that help teams *find and fix* weaknesses in **their own** LLM applications, agents, and codebases — before someone else finds them. Driven by prompts to any AI agent harness; no CLI, no install.
 
 ## 2. What this project IS NOT (and will never ship)
 

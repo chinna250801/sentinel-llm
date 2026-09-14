@@ -12,7 +12,7 @@ Guidelines (v0.x) → **runnable toolkit** (v1.0): a small, dependency-light ope
 - [x] **Skills suite** (`skills/`) — 10 named testing disciplines with canary safety, finding schema, RoE template, grading
 - [x] **PROSPECTOR** (`skills/audit-codebase/`) — static, language-agnostic codebase audit (per-language sink tables, Semgrep rule skeletons, slopsquatting/agent-config checks)
 - [x] **Defender Charter** (`SAFETY.md`) — binding offline/local-only/zero-telemetry guarantees + governance
-- [x] **MARSHAL orchestrator spec** — `sentinel` CLI interface (scan/audit/report/retest), presets, exit codes for CI
+- [x] **MARSHAL orchestrator spec** — prompt-driven interface (audit / test / summarize / retest), presets, JSON outputs for CI
 - [x] **Final blueprint** (`docs/BLUEPRINT.md`) — full system report with worked example and safety architecture
 - [ ] Community feedback round ( threat-model review, control numbering/stability )
 - [ ] CONTRIBUTING.md, SECURITY.md, Code of Conduct
@@ -34,7 +34,7 @@ Guidelines (v0.x) → **runnable toolkit** (v1.0): a small, dependency-light ope
 - [ ] Inspect-compatible task wrappers so controls run as AISI-style evals
 - [ ] Reporting: bypass-rate dashboard, trend over releases
 - [ ] **Skills automation**: executable probe scripts + findings JSON emitters for the 10 skills in `skills/` (PROSPECTOR, LOCKPICK, TROJAN, X-RAY, ARCHIVIST, DEPUTY, SMUGGLER, CUSTOMS, WATCHTOWER, MARSHAL)
-- [ ] **PROSPECTOR runner**: `sentinel-scan <repo>` CLI orchestrating gitleaks/trufflehog, semgrep (OWASP-LLM ruleset), osv-scanner, modelscan, slopsquat verification, agent-config unicode scan → findings JSON + repo grade
+- [ ] **Optional probe runners**: executable helpers an agent can invoke (gitleaks/trufflehog, semgrep OWASP-LLM ruleset, osv-scanner, modelscan, slopsquat verification, agent-config unicode scan) → findings JSON + repo grade — automation support, not a new interface
 
 ### M5 — v1.0 Open-source launch
 - [ ] Docs site + quickstart under 30 minutes

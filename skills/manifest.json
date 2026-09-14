@@ -13,12 +13,13 @@
   "orchestrator": {
     "skill": "sentinel-assessor",
     "codename": "MARSHAL",
-    "interface": {
-      "scan": "sentinel scan <repo>       # static codebase audit (offline)",
-      "audit": "sentinel audit <target> --preset <name>",
-      "report": "sentinel report <run>",
-      "retest": "sentinel retest <run>"
-    },
+    "interface": "prompt-driven: any agent harness loads this manifest, reads the chosen SKILL.md as procedure, and executes it under AGENTS.md rules",
+    "example_prompts": [
+      "Load PROSPECTOR from skills/manifest.json and audit this repo. Grade it. Show my fix list.",
+      "Load X-RAY + LOCKPICK and test my chat app on localhost:8080. Canaries only.",
+      "Run the full preset on my RAG service, then prove cleanup.",
+      "Retest the open findings from my last run — close only what passes now."
+    ],
     "presets": {
       "static": ["audit-codebase"],
       "chat": ["audit-codebase", "introspect-leakage", "redteam-jailbreak", "audit-ops"],

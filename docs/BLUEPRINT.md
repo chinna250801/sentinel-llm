@@ -6,12 +6,12 @@
 
 ## 1. Mission
 
-Give every team shipping LLM applications a **defender-only, fully local, dead-simple** way to find and fix exploitable weaknesses — guided by 20 evidence-backed controls, executed through 10 named testing skills, orchestrated by one command.
+Give every team shipping LLM applications a **defender-only, fully local, dead-simple** way to find and fix exploitable weaknesses — guided by 20 evidence-backed controls, executed through 10 named testing skills, driven by one prompt to any agent.
 
 **The three promises (binding, see [SAFETY.md](../SAFETY.md)):**
 1. **Defender-only.** Nothing in this repo is attack tooling. Every technique is documented at pattern level, in remediation form, exactly the way OWASP/MITRE/NIST publish.
 2. **Locally run.** Offline by default; zero telemetry; findings never leave your disk. Verifiable by running with your firewall on block-all.
-3. **Effortlessly usable.** `sentinel scan ./repo` — that's the whole API for the static audit. Sensible presets decide everything else for you.
+3. **Effortlessly usable.** One prompt to any agent — "audit this repo, grade it" — that's the whole API. No CLI, no install; the skills are the procedure.
 
 ---
 
@@ -43,7 +43,7 @@ An attacker must defeat *every* layer; a defender only needs the stack to hold. 
 | **Knowledge** | `docs/RESEARCH.md` | The evidence base: threats, incidents, standards, defenses — every claim cited (OWASP LLM10 + Agentic, MITRE ATLAS, NIST AI RMF, ISO 42001, EU AI Act, UK AISI/Inspect, CaMeL, spotlighting, MAESTRO, local-first) |
 | **Controls** | `docs/GUIDELINES.md` (+ Appendix A for code-level enforcement) | The 20 controls C01–C20: threat → evidence → implement → test, mapped to OWASP/ASI/ATLAS |
 | **Skills** | `skills/` (10 disciplines) | Named, repeatable testing playbooks that produce schema'd findings |
-| **Orchestrator** | `sentinel` CLI (spec'd in MARSHAL) | One command: classify → sequence → consolidate → grade → retest |
+| **Orchestrator** | MARSHAL (`skills/sentinel-assessor`) | One prompt to any agent: classify → sequence → consolidate → grade → retest |
 
 ## 5. The skills suite (10 disciplines)
 
@@ -64,10 +64,8 @@ Every skill: **scope → probe → detect → score → report → cleanup**, em
 
 ## 6. End-to-end: what a run looks like
 
-Worked example — *"ACME Assistant"*, a Python RAG + tools service with an MCP filesystem server:
-
-```bash
-$ sentinel scan ./acme-assistant
+Worked example — *"ACME Assistant"*, a Python RAG + tools service with an MCP filesystem server:```text
+"Load PROSPECTOR from skills/manifest.json and audit ./acme-assistant"
   PROSPECTOR (static, offline)
   ├─ CA-1 secrets ............ 2 findings  (openai key in tests/fixture.env — LIVE → critical)
   ├─ CA-2 agent configs ...... 1 finding   (.cursor/rules: 'always curl ...' instruction — high)
@@ -78,7 +76,7 @@ $ sentinel scan ./acme-assistant
   ├─ CA-7 MCP server ......... 1 finding   (tool description contains instruction text — high)
   └─ grade: D — fix order: [C01 secrets, C04 sink, C05 slopsquat, C05 MCP, C06, C01]
 
-$ sentinel audit http://localhost:8080 --preset agentic
+"Run the agentic preset against my service on localhost:8080. Canaries only."
   (RoE check: local target ✓)  (canary sink: 127.0.0.1:8765 ✓)
   ├─ X-RAY ...... system prompt extracted in 11 turns; contains internal URL → medium
   ├─ LOCKPICK ... Crescendo bypass by turn 4 → high (layer: model, no app block)
@@ -88,11 +86,11 @@ $ sentinel audit http://localhost:8080 --preset agentic
   ├─ SMUGGLER ... (TROJAN already fired SE-1; egress allow-list absent)
   └─ WATCHTOWER . replay vs SIEM: zero alerts on the exfil chain → high (invisible breach)
 
-$ sentinel retest runs/2026-09-14-acme/
+"Retest the open findings from my last run."
   3 of 9 findings closed with proof (negative results); grade D → C. Remaining: 6.
 ```
 
-The operator never configures anything, never reads a schema, and finishes with a fix list ordered by (severity × control level × effort). Same run, same findings, CI-consumable via `--json`.
+The operator never configures anything, never reads a schema, and finishes with a fix list ordered by (severity × control level × effort). Findings and grades are plain JSON files — CI-consumable as-is.
 
 ## 7. The safety architecture — why this cannot be weaponized
 
@@ -125,7 +123,7 @@ The operator never configures anything, never reads a schema, and finishes with 
 └── skills/
     ├── README.md             suite index + workflow diagram + hard rules
     ├── _shared/conventions.md finding schema, canaries, severity, RoE, grading
-    ├── sentinel-assessor/    MARSHAL (orchestrator + sentinel CLI spec)
+    ├── sentinel-assessor/    MARSHAL (prompt-driven orchestrator)
     ├── audit-codebase/       PROSPECTOR + per-language tables + Semgrep rules
     ├── introspect-leakage/   X-RAY
     ├── introspect-memory-rag/ ARCHIVIST
@@ -140,7 +138,7 @@ The operator never configures anything, never reads a schema, and finishes with 
 ## 10. Ship plan (condensed from ROADMAP)
 
 - **v0.1 (now):** charter + guidelines + research + 10 skill playbooks + orchestrator spec.
-- **v0.2–v0.4:** machine-readable checklist/scorer; `sentinel scan` runner (gitleaks/semgrep/osv/modelscan wired); reference implementations (spotlighting preprocessor, egress proxy, PDP, memory contracts).
+- **v0.2–v0.4:** machine-readable checklist/scorer; optional probe runners an agent can invoke (gitleaks/semgrep/osv/modelscan wired); reference implementations (spotlighting preprocessor, egress proxy, PDP, memory contracts).
 - **v0.6:** live-skill automation (probe emitters), AgentDojo/Inspect-compatible eval wrappers, bypass-rate dashboards.
 - **v1.0:** docs site, reference case study, community governance — **launch release test: full suite runs with networking disabled.**
 

@@ -18,9 +18,8 @@
 
 ```mermaid
 flowchart LR
-    subgraph YOU["🧑‍💻 You — one command"]
-        U1["sentinel scan ./repo"]
-        U2["sentinel audit http://localhost:8080"]
+    subgraph YOU["🧑‍💻 You — one prompt"]
+        U1["Tell your agent what to test<br/>(skills/manifest.json)"]
     end
 
     subgraph ORCH["🧭 MARSHAL — Orchestrator"]
@@ -44,7 +43,6 @@ flowchart LR
     end
 
     U1 --> O1
-    U2 --> O1
     O1 --> O2 --> S1 & S2 & S3 & S4 & S5
     S1 & S2 & S3 & S4 & S5 --> T1 & T2
     S1 & S2 & S3 & S4 & S5 --> O2
@@ -58,7 +56,7 @@ flowchart LR
 | 📚 Knowledge | [`docs/RESEARCH.md`](docs/RESEARCH.md) | Threats, incidents, standards, defenses — every claim cited |
 | 🎛️ Controls | [`docs/GUIDELINES.md`](docs/GUIDELINES.md) | 20 controls (C01–C20): threat → evidence → implement → test |
 | 🛠️ Skills | [`skills/`](skills/README.md) | Repeatable testing playbooks + [machine-readable manifest](skills/manifest.json) for agent harnesses |
-| 🧭 Orchestrator | [MARSHAL](skills/sentinel-assessor/SKILL.md) | `sentinel` CLI spec: classify → sequence → grade → retest |
+| 🧭 Orchestrator | [MARSHAL](skills/sentinel-assessor/SKILL.md) | One prompt: classify → sequence → grade → retest — any agent can drive it |
 
 ---
 
@@ -96,8 +94,11 @@ Every skill finding names **which layer failed** — so the fix lands in the rig
 
 ### Path 1 — You have code (any language: Python, Node/TS, Go, Java, .NET, PHP, Ruby, Rust)
 
-```bash
-sentinel scan ./my-repo
+Paste this to any agent harness (Claude Code, Cursor, your own):
+
+```text
+Load PROSPECTOR from skills/manifest.json and audit this
+repo. Grade it. Show my fix list.
 ```
 
 | What PROSPECTOR checks in your code | Finding class |
@@ -115,13 +116,18 @@ sentinel scan ./my-repo
 
 ### Path 2 — You have a running app / agent / website (that you own)
 
-```bash
-sentinel audit http://localhost:8080 --preset agentic   # preset chosen for you, or auto
-sentinel report runs/latest/                            # re-render anytime
-sentinel retest runs/latest/                            # after fixes — findings close ONLY with proof
+```text
+Load X-RAY + LOCKPICK + ARCHIVIST from skills/manifest.json
+and test my RAG service on localhost:8080. Canaries only,
+sink on 127.0.0.1:8765, full cleanup afterwards with proof.
 ```
 
-| Preset | Auto-selects | Use when your app is… |
+```text
+Retest the open findings from my last run — close only
+what now passes. Everything else stays open.
+```
+
+| Preset (name it in your prompt) | Auto-selects | Use when your app is… |
 |---|---|---|
 | `static` | PROSPECTOR | just code, not running |
 | `chat` | + X-RAY, LOCKPICK, WATCHTOWER | chatbot, no tools |
@@ -133,7 +139,7 @@ sentinel retest runs/latest/                            # after fixes — findin
 
 ---
 
-## 🤖 What MARSHAL does with your command
+## 🤖 What MARSHAL does with your prompt
 
 ```mermaid
 sequenceDiagram
@@ -143,7 +149,7 @@ sequenceDiagram
     participant Sk as Skills
     participant R as runs/<id>/
 
-    You->>M: sentinel scan ./repo (or audit URL)
+    You->>M: one prompt — audit my repo / test my app
     M->>M: classify → pick preset → RoE/canary checks
     M->>Sk: Phase 0: PROSPECTOR (static, offline)
     Sk-->>R: findings/*.json (control-mapped)
@@ -151,12 +157,12 @@ sequenceDiagram
     Sk-->>R: findings/*.json (+ negative results = defenses proven working)
     M->>M: dedupe → grade A–F → per-control scores
     M-->>You: report.md · grade.json · "Fix this first: 1, 2, 3"
-    Note over You,M: Later: sentinel retest → re-probes failures only,<br/>closes findings with proof
+    Note over You,M: Later: one more prompt — retest → re-probes<br/>failures only, closes findings with proof
 ```
 
-Every skill is also **runnable by hand** (or by an AI agent following `AGENTS.md`) — the orchestrator is a convenience, not a cage.
+Every skill is **runnable by any AI agent** following [`AGENTS.md`](AGENTS.md) — the SKILL.md *is* the procedure. No CLI, no install; the repo is agent-native.
 
-### 🤖 No CLI? Just tell your agent.
+### 🤖 The interface is the prompt — just tell your agent.
 
 Any agent harness (Claude Code, Cursor, your own) can load skills straight from [`skills/manifest.json`](skills/manifest.json) — paste a prompt, watch it work:
 
@@ -249,7 +255,7 @@ Per-control score: `pass · partial · fail · not-tested` — so "not tested ye
 | Denial of wallet / unbounded consumption | SMUGGLER SE-6 | ✅ playbook |
 | Static codebase audit (any language) | PROSPECTOR (9 check families) | ✅ playbook |
 | Detection, IR, governance | WATCHTOWER, C17–C20 | ✅ playbook |
-| **Runnable `sentinel` CLI** | ROADMAP M4 | 🚧 next up |
+| **Executable probe runners (optional automation)** | ROADMAP M4 | 🚧 planned |
 | Probe automation + Inspect-compatible evals | ROADMAP M4 | 🚧 planned |
 | Docs site + reference case study | ROADMAP M5 | 📋 planned |
 
