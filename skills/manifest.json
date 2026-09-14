@@ -1,0 +1,166 @@
+{
+  "manifest_version": "1.0",
+  "name": "sentinel-llm-skills",
+  "description": "Defender-only LLM security skills suite: guidelines, static codebase audit, and live testing disciplines. Offline-capable, canary-safe, zero telemetry.",
+  "charter": "../SAFETY.md",
+  "conventions": "_shared/conventions.md",
+  "finding_schema": {
+    "required": ["id", "skill", "probe_id", "title", "severity", "controls", "owasp", "evidence", "impact", "recommendation", "status"],
+    "severity_enum": ["critical", "high", "medium", "low", "info"],
+    "status_enum": ["open", "confirmed", "fixed", "risk-accepted"],
+    "output_dir": "runs/<date>-<target>/findings/*.json"
+  },
+  "orchestrator": {
+    "skill": "sentinel-assessor",
+    "codename": "MARSHAL",
+    "interface": {
+      "scan": "sentinel scan <repo>       # static codebase audit (offline)",
+      "audit": "sentinel audit <target> --preset <name>",
+      "report": "sentinel report <run>",
+      "retest": "sentinel retest <run>"
+    },
+    "presets": {
+      "static": ["audit-codebase"],
+      "chat": ["audit-codebase", "introspect-leakage", "redteam-jailbreak", "audit-ops"],
+      "rag": ["audit-codebase", "introspect-leakage", "introspect-memory-rag", "redteam-jailbreak", "redteam-injection", "audit-ops"],
+      "agentic": ["audit-codebase", "introspect-leakage", "introspect-memory-rag", "redteam-jailbreak", "redteam-injection", "pentest-toolchain", "pentest-egress", "audit-ops"],
+      "full": ["audit-codebase", "introspect-leakage", "introspect-memory-rag", "redteam-jailbreak", "redteam-injection", "pentest-toolchain", "pentest-egress", "pentest-supply-chain", "audit-ops"]
+    }
+  },
+  "skills": [
+    {
+      "id": "sentinel-assessor",
+      "codename": "MARSHAL",
+      "discipline": "orchestration",
+      "entrypoint": "sentinel-assessor/SKILL.md",
+      "controls": ["C01-C20"],
+      "offline": true,
+      "requires_roe": "non-local targets only",
+      "plants_artifacts": false,
+      "purpose": "Classify target, sequence skills, consolidate findings, grade, retest loop."
+    },
+    {
+      "id": "audit-codebase",
+      "codename": "PROSPECTOR",
+      "discipline": "code-audit-static",
+      "entrypoint": "audit-codebase/SKILL.md",
+      "companion": ["audit-codebase/languages.md"],
+      "controls": ["C01", "C02", "C03", "C04", "C05", "C07", "C08", "C11", "C13", "C14", "C15"],
+      "owasp": ["LLM03", "LLM05", "LLM06", "LLM07"],
+      "offline": true,
+      "requires_roe": false,
+      "plants_artifacts": false,
+      "purpose": "Read-only static audit of any codebase, any language: secrets (incl. agent config files), config poisoning, LLM call construction, output sinks, slopsquatting, model artifacts, MCP code, unsafe deserialization, CI checks."
+    },
+    {
+      "id": "introspect-leakage",
+      "codename": "X-RAY",
+      "discipline": "introspection",
+      "entrypoint": "introspect-leakage/SKILL.md",
+      "controls": ["C01", "C07", "C11"],
+      "owasp": ["LLM07", "LLM02"],
+      "offline": true,
+      "requires_roe": "non-local targets only",
+      "plants_artifacts": false,
+      "purpose": "System-prompt extraction (graduated), secret discovery in assembled prompts, PII regurgitation, cross-session bleed, hidden-channel disclosure."
+    },
+    {
+      "id": "introspect-memory-rag",
+      "codename": "ARCHIVIST",
+      "discipline": "introspection",
+      "entrypoint": "introspect-memory-rag/SKILL.md",
+      "controls": ["C09", "C10"],
+      "owasp": ["LLM04", "LLM08"],
+      "offline": true,
+      "requires_roe": "non-local targets only",
+      "plants_artifacts": true,
+      "canary_only": true,
+      "purpose": "RAG poisoning, agent memory implanting with cross-session persistence verification, memory hygiene audit, tenant isolation, purge verification."
+    },
+    {
+      "id": "redteam-jailbreak",
+      "codename": "LOCKPICK",
+      "discipline": "red-team",
+      "entrypoint": "redteam-jailbreak/SKILL.md",
+      "controls": ["C01", "C06", "C07", "C08", "C17"],
+      "owasp": ["LLM01", "LLM09"],
+      "offline": true,
+      "requires_roe": "non-local targets only",
+      "plants_artifacts": false,
+      "purpose": "Jailbreak mechanism testing: roleplay, multi-turn Crescendo, Bad Likert Judge, encoding, context stuffing, authority framing, refusal suppression."
+    },
+    {
+      "id": "redteam-injection",
+      "codename": "TROJAN",
+      "discipline": "red-team",
+      "entrypoint": "redteam-injection/SKILL.md",
+      "controls": ["C01", "C03", "C04", "C06", "C12", "C13", "C14", "C15"],
+      "owasp": ["LLM01", "LLM06"],
+      "offline": true,
+      "requires_roe": "non-local targets only",
+      "plants_artifacts": true,
+      "canary_only": true,
+      "purpose": "Direct and indirect prompt injection: document/web/tool-result channels, cross-tenant bleed, approval bypass, multimodal surfaces. EchoLeak-pattern chains with canary-only payloads."
+    },
+    {
+      "id": "pentest-toolchain",
+      "codename": "DEPUTY",
+      "discipline": "penetration",
+      "entrypoint": "pentest-toolchain/SKILL.md",
+      "controls": ["C01", "C02", "C03", "C12", "C13", "C14", "C15"],
+      "owasp": ["LLM06", "LLM05"],
+      "offline": true,
+      "requires_roe": "non-local targets only",
+      "plants_artifacts": true,
+      "canary_only": true,
+      "purpose": "Confused-deputy testing: permission matrix, over-privilege reads/writes on canary staging resources, schema fuzzing, sandbox escape surface, approval robustness, dual-LLM taint checks."
+    },
+    {
+      "id": "pentest-egress",
+      "codename": "SMUGGLER",
+      "discipline": "penetration",
+      "entrypoint": "pentest-egress/SKILL.md",
+      "controls": ["C04", "C11", "C16"],
+      "owasp": ["LLM01", "LLM02", "LLM10"],
+      "offline": true,
+      "requires_roe": "non-local targets only",
+      "plants_artifacts": true,
+      "canary_only": true,
+      "purpose": "Exfiltration chain testing against tester-controlled local sink: zero-click auto-fetch, link-following, tool egress abuse, storage side-channels, context over-assembly, bounded denial-of-wallet."
+    },
+    {
+      "id": "pentest-supply-chain",
+      "codename": "CUSTOMS",
+      "discipline": "penetration",
+      "entrypoint": "pentest-supply-chain/SKILL.md",
+      "controls": ["C05"],
+      "owasp": ["LLM03", "LLM04"],
+      "offline": true,
+      "requires_roe": "non-local targets only",
+      "plants_artifacts": true,
+      "canary_only": true,
+      "purpose": "Artifact inventory (ML-BOM seed), model provenance and format verification, MCP/plugin vetting with tool-description poisoning test, dataset integrity, CI fail-closed checks, dependency surface."
+    },
+    {
+      "id": "audit-ops",
+      "codename": "WATCHTOWER",
+      "discipline": "audit",
+      "entrypoint": "audit-ops/SKILL.md",
+      "controls": ["C16", "C17", "C18", "C19", "C20"],
+      "owasp": [],
+      "offline": true,
+      "requires_roe": "non-local targets only",
+      "plants_artifacts": false,
+      "purpose": "Detection replay against your SIEM, telemetry inventory, guardrail accounting, AI-specific IR readiness, governance audit, announced canary fire drill."
+    }
+  ],
+  "safety": {
+    "charter": "SAFETY.md",
+    "canary_prefix": "SENTINEL-CANARY-",
+    "exfil_sink_policy": "tester-controlled local listener only",
+    "telemetry": "none",
+    "network_egress": "only to explicitly user-named local/staging targets during live presets",
+    "destructive_tests": "canary-marked staging resources only",
+    "pr_policy": "offensive-capability contributions are declined"
+  }
+}
