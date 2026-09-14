@@ -25,7 +25,7 @@ flowchart LR
     subgraph ORCH["🧭 MARSHAL — Orchestrator"]
         O1["Classify target<br/>auto-preset"]
         O2["Sequence skills<br/>consolidate findings"]
-        O3["Grade A–F<br/>&quot;Fix this first&quot;"]
+        O3["Grade A–F<br/>+ Fix this first"]
     end
 
     subgraph SKILLS["🛠️ 10 Skills (5 disciplines)"]
@@ -46,7 +46,7 @@ flowchart LR
     O1 --> O2 --> S1 & S2 & S3 & S4 & S5
     S1 & S2 & S3 & S4 & S5 --> T1 & T2
     S1 & S2 & S3 & S4 & S5 --> O2
-    O2 --> O3 --> R["📄 runs/&lt;id&gt;/report.md<br/>findings/*.json · grade.json"]
+    O2 --> O3 --> R["📄 runs - report.md<br/>findings JSON · grade JSON"]
 ```
 
 **Four layers, each cited from research:**
@@ -147,7 +147,7 @@ sequenceDiagram
     participant You
     participant M as MARSHAL (orchestrator)
     participant Sk as Skills
-    participant R as runs/<id>/
+    participant R as Run Folder
 
     You->>M: one prompt — audit my repo / test my app
     M->>M: classify → pick preset → RoE/canary checks
@@ -272,7 +272,7 @@ flowchart LR
         P2["Canary strings only<br/>SENTINEL-CANARY-*"]
         P3["Fixes, checklists,<br/>detection rules"]
     end
-    subgraph N={"❌ What it will never contain"}
+    subgraph NEVER["❌ What it will never contain"]
         N1["Exploit code"]
         N2["Target discovery / attack automation"]
         N3["Telemetry / phone-home"]
