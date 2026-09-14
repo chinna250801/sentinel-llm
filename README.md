@@ -1,85 +1,270 @@
 # Sentinel-LLM
 
-> **Motto: assume the model is exploitable — build the system so it doesn't matter.**
+> 🛡️ **Assume the model is exploitable — build the system so it doesn't matter.**
+>
+> **Defender-only · Locally run · Zero telemetry · Works air-gapped** — binding per the [Defender Charter](SAFETY.md)
 
-**Sentinel-LLM** is an open-source, lightweight playbook for securing LLM applications and AI agents. It distills the 2024–2026 state of AI-cybersecurity research (OWASP GenAI, MITRE ATLAS, NIST AI RMF, UK AISI/Inspect, EU AI Act) into **20 concrete, testable controls** — no platform purchase required.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Charter](https://img.shields.io/badge/charter-shield%2C%20not%20sword-2ea44f)
+![Skills](https://img.shields.io/badge/skills-10-8250df)
+![Controls](https://img.shields.io/badge/controls-20-0969da)
+![Offline](https://img.shields.io/badge/offline-first-yes-2ea44f)
 
-> 🛡️ **Defender-only. Locally run. Zero data leaves your machine.** Everything here is for finding and fixing weaknesses in *your own* systems — no offensive tooling, no telemetry, no phone-home, works air-gapped. This is binding: read the [Defender Charter](SAFETY.md).
+**Sentinel-LLM** turns 2024–2026 AI-cybersecurity research (OWASP GenAI, MITRE ATLAS, NIST AI RMF, UK AISI/Inspect, EU AI Act, CSA MAESTRO) into a lightweight, evidence-backed toolkit: **20 testable controls**, **10 named testing skills**, and **one orchestrator** that finds exploitable weaknesses in *your* LLM apps, agents, websites, and codebases — in any language — and hands you a graded fix list.
 
-## Why this exists
+---
 
-Models *are* exploitable:
+## 🗺️ The big picture
 
-- **Prompt injection** remains unsolved at the model level (OWASP LLM01; OpenAI has said it may never be fully fixed).
-- Real-world **zero-click agent exploits** shipped in 2025: [EchoLeak (CVE-2025-32711) in M365 Copilot](https://arxiv.org/html/2509.10540v1), ShadowLeak in ChatGPT connectors.
-- **MCP tool poisoning**, RAG poisoning, and agent **memory implanting** turn one-shot attacks into persistent ones.
-- AI cyber capability is measurably accelerating (UK AISI: ~4.2-month doubling on software tasks).
+```mermaid
+flowchart LR
+    subgraph YOU["🧑‍💻 You — one command"]
+        U1["sentinel scan ./repo"]
+        U2["sentinel audit http://localhost:8080"]
+    end
 
-So the defense must live in the *system around the model*: least privilege, gated actions, controlled egress, provenance, and continuous testing. That's what this repo gives you.
+    subgraph ORCH["🧭 MARSHAL — Orchestrator"]
+        O1["Classify target<br/>auto-preset"]
+        O2["Sequence skills<br/>consolidate findings"]
+        O3["Grade A–F<br/>&quot;Fix this first&quot;"]
+    end
 
-## What's inside
+    subgraph SKILLS["🛠️ 10 Skills (5 disciplines)"]
+        direction TB
+        S1["🔍 PROSPECTOR<br/>code audit · static"]
+        S2["🕵️ X-RAY · ARCHIVIST<br/>introspection"]
+        S3["⚔️ LOCKPICK · TROJAN<br/>red team"]
+        S4["🛡️ DEPUTY · SMUGGLER · CUSTOMS<br/>penetration"]
+        S5["📡 WATCHTOWER<br/>audit"]
+    end
 
-| File | Purpose |
-|---|---|
-| [`SAFETY.md`](SAFETY.md) | **The Defender Charter** — offline guarantee, privacy, acceptable use (binding) |
-| [`docs/GUIDELINES.md`](docs/GUIDELINES.md) | **The 20 controls** (5 levels, threat → evidence → implement → test) — start here |
-| [`docs/RESEARCH.md`](docs/RESEARCH.md) | Full research compendium: attack taxonomies, incidents, standards, defenses — every claim cited |
-| [`skills/`](skills/README.md) | **The skills suite** — 10 named testing skills (red team / introspection / pentest / audit / code audit) that probe your LLM app, agent, website, or codebase and score it against the controls |
-| [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) | **The final report** — how everything fits together, worked end-to-end example, safety architecture |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Path from guidelines to a runnable open-source toolkit (v1.0) |
+    subgraph TARGET["🎯 Your systems (only yours)"]
+        T1["Codebase<br/>any language"]
+        T2["LLM app · RAG · Agent<br/>MCP · Website"]
+    end
 
-## Quick start (1 day, Level 0)
-
-1. Remove all secrets from every prompt; enforce policy in code, not prompts (**C01**).
-2. Give each tool its own scoped, short-lived credentials (**C02**).
-3. Put human approval behind an explicit dangerous-action list with exact-effect previews (**C03**).
-4. Proxy agent network calls through a domain allow-list (**C04**).
-5. Prefer safetensors, pin + verify models, vet MCP servers like npm packages (**C05**).
-
-Level 0 alone blunts the majority of realistic agent attacks. Levels 1–4 add prompt hardening, data/memory integrity, CaMeL-style agentic containment, and continuous assurance.
-
-## Test your app with the skills suite
-
-Run [**MARSHAL**](skills/sentinel-assessor/SKILL.md) — the orchestrator and front door. Its whole interface:
-
-```bash
-sentinel scan ./my-repo                          # static codebase audit — one command
-sentinel audit http://localhost:8080 --preset agentic   # live app you own
-sentinel retest runs/latest/                     # after fixes — findings close only with proof
+    U1 --> O1
+    U2 --> O1
+    O1 --> O2 --> S1 & S2 & S3 & S4 & S5
+    S1 & S2 & S3 & S4 & S5 --> T1 & T2
+    S1 & S2 & S3 & S4 & S5 --> O2
+    O2 --> O3 --> R["📄 runs/&lt;id&gt;/report.md<br/>findings/*.json · grade.json"]
 ```
 
-It scopes your app, sequences the right specialist skills, and produces a graded report:
+**Four layers, each cited from research:**
 
-| Skill | Codename | What it does |
+| Layer | Where | What you get |
 |---|---|---|
-| `sentinel-assessor` | **MARSHAL** | Orchestrates the suite, consolidates findings, computes the A–F grade |
-| `redteam-jailbreak` | **LOCKPICK** | Jailbreaks: roleplay, Crescendo, Bad Likert Judge, encoding, smuggling |
-| `redteam-injection` | **TROJAN** | Direct + indirect prompt injection (EchoLeak-pattern chains) |
-| `introspect-leakage` | **X-RAY** | System-prompt extraction, secret discovery, PII regurgitation |
-| `introspect-memory-rag` | **ARCHIVIST** | RAG poisoning + agent memory implants (persistence testing) |
-| `pentest-toolchain` | **DEPUTY** | Confused deputy: tool misuse, missing authorization, approval bypass |
-| `pentest-egress` | **SMUGGLER** | Exfil chains via canary sink, egress control, denial of wallet |
-| `pentest-supply-chain` | **CUSTOMS** | Model/MCP/plugin supply chain: pinning, signatures, tool poisoning |
-| `audit-ops` | **WATCHTOWER** | Would your SOC have seen it? Telemetry, IR readiness, governance |
-| `audit-codebase` | **PROSPECTOR** | **Static, offline audit of the codebase itself — any language** (Python, Node/TS, Go, Java, .NET, PHP, Ruby, Rust): secrets, agent-config poisoning, unsafe output sinks, slopsquatting, pickle weights, MCP code flaws. No live target needed |
+| 📚 Knowledge | [`docs/RESEARCH.md`](docs/RESEARCH.md) | Threats, incidents, standards, defenses — every claim cited |
+| 🎛️ Controls | [`docs/GUIDELINES.md`](docs/GUIDELINES.md) | 20 controls (C01–C20): threat → evidence → implement → test |
+| 🛠️ Skills | [`skills/`](skills/README.md) | Repeatable testing playbooks + [machine-readable manifest](skills/manifest.json) for agent harnesses |
+| 🧭 Orchestrator | [MARSHAL](skills/sentinel-assessor/SKILL.md) | `sentinel` CLI spec: classify → sequence → grade → retest |
 
-Every probe uses canary strings (never real data), emits machine-readable findings JSON mapped to control IDs, and records negative results too. Safety rules: signed rules-of-engagement for non-local targets, harmless metaprompt-style probes only — see [`skills/_shared/conventions.md`](skills/_shared/conventions.md).
+---
 
-### Just have code, not a running app?
+## ⛰️ Defense philosophy: cut the slope
 
-Point [**PROSPECTOR**](skills/audit-codebase/SKILL.md) at any repository — Python, Node/TS, Go, Java, PHP, Ruby, .NET, Rust. It is **static and read-only**: no probes are sent, nothing is executed, no RoE needed. It finds the same control violations in source — hardcoded secrets (including in `CLAUDE.md`/`.cursorrules`), LLM output flowing into shell/SQL/HTML sinks, unpinned or nonexistent (slopsquat) packages, pickle model weights, MCP tool-description poisoning — and emits a graded findings report plus a ready-to-wire CI recipe. Why it matters: ~45% of AI-generated code samples introduce OWASP Top 10 flaws (Veracode 2025), and agent config files are now a credential-leak channel (Radware).
+You can't fix the model. You **make exploitation worthless** by stacking deterministic layers under it — an attacker must beat *all* of them:
 
-## Design principles
+```mermaid
+flowchart TD
+    A["💥 Attacker fools the model<br/>(prompt injection — assume it happens)"] --> B{"C06/C07 · Spotlighting?<br/>untrusted input marked as data"}
+    B -- "caught" --> OK["✅ Attack visible as text"]
+    B -- "passed" --> C{"C01/C08 · Policy in code?<br/>not in the prompt"}
+    C -- "caught" --> OK2["✅ Nothing to talk your way into"]
+    C -- "passed" --> D{"C02/C15 · Least privilege + PDP?<br/>hijack has no keys"}
+    D -- "caught" --> OK3["✅ Tool refuses — no authority"]
+    D -- "passed" --> E{"C03 · Action gate?<br/>exact-effect preview"}
+    E -- "caught" --> OK4["✅ Human sees the real ask"]
+    E -- "passed" --> F{"C04/C16 · Egress allow-list + budgets"}
+    F -- "caught" --> OK5["✅ Nothing leaves, nothing costs"]
+    F -- "passed" --> G["🚨 Breach — but telemetry (C18)<br/>and red-team KPIs (C17) shorten it"]
+    style A fill:#8b1c1c,color:#fff
+    style G fill:#8b1c1c,color:#fff
+    style OK fill:#1a5f2a,color:#fff
+    style OK2 fill:#1a5f2a,color:#fff
+    style OK3 fill:#1a5f2a,color:#fff
+    style OK4 fill:#1a5f2a,color:#fff
+    style OK5 fill:#1a5f2a,color:#fff
+```
 
-1. **Contain the blast radius** — you can't fix the model; you can make exploitation worthless.
-2. **Evidence over vibes** — every control cites research, a standard, or an incident.
-3. **Lightweight** — ~20 controls, implementable with code you already have; testable with free/open tooling (promptfoo, garak, PyRIT, AgentDojo, Inspect).
-4. **AISI-aligned** — we frame controls as runnable evaluations so they plug into [Inspect](https://inspect.aisi.org.uk/)-style harnesses.
+Every skill finding names **which layer failed** — so the fix lands in the right place, not in another prompt tweak.
 
-## Status
+---
 
-`v0.1` — guidelines + research. Roadmap to a runnable checker/testkit: see [ROADMAP](docs/ROADMAP.md).
+## 🚀 How to use it
 
-## License
+### Path 1 — You have code (any language: Python, Node/TS, Go, Java, .NET, PHP, Ruby, Rust)
 
-MIT — see [LICENSE](LICENSE).
+```bash
+sentinel scan ./my-repo
+```
+
+| What PROSPECTOR checks in your code | Finding class |
+|---|---|
+| Hardcoded secrets — **including inside `CLAUDE.md` / `.cursorrules` / `AGENTS.md`** | 🔴 critical if live |
+| Hidden instructions / zero-width chars in agent config files | 🟠 high |
+| LLM output flowing into shell / SQL / HTML / `eval` sinks | 🔴 critical |
+| User text interpolated into system prompts, unmarked | 🟡 medium |
+| Nonexistent (slopsquat) or unpinned packages; pickle model weights | 🟠 high |
+| MCP server code: tool-description poisoning, over-broad scopes | 🟠 high |
+| Unsafe deserialization (`pickle`, `yaml.load`, `eval`, `new Function`…) | 🔴 critical if reachable |
+| CI that accepts unsigned models / unpinned actions | 🟡 medium |
+
+*Output: graded report + `file:line` fix list + ready-to-wire CI recipe. **100% offline, read-only, no authorization needed.***
+
+### Path 2 — You have a running app / agent / website (that you own)
+
+```bash
+sentinel audit http://localhost:8080 --preset agentic   # preset chosen for you, or auto
+sentinel report runs/latest/                            # re-render anytime
+sentinel retest runs/latest/                            # after fixes — findings close ONLY with proof
+```
+
+| Preset | Auto-selects | Use when your app is… |
+|---|---|---|
+| `static` | PROSPECTOR | just code, not running |
+| `chat` | + X-RAY, LOCKPICK, WATCHTOWER | chatbot, no tools |
+| `rag` | + ARCHIVIST, TROJAN | RAG over documents |
+| `agentic` | + DEPUTY, SMUGGLER | tools, MCP, actions |
+| `full` | everything incl. CUSTOMS | mixed / platform |
+
+**Live-test safety (built in, not optional):** canary strings only — never real data · exfil sink is *your own* localhost listener · destructive tests touch only canary-marked staging resources · signed RoE required for anything non-local · per-skill cleanup checklists.
+
+---
+
+## 🤖 What MARSHAL does with your command
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant You
+    participant M as MARSHAL (orchestrator)
+    participant Sk as Skills
+    participant R as runs/<id>/
+
+    You->>M: sentinel scan ./repo (or audit URL)
+    M->>M: classify → pick preset → RoE/canary checks
+    M->>Sk: Phase 0: PROSPECTOR (static, offline)
+    Sk-->>R: findings/*.json (control-mapped)
+    M->>Sk: Phase 1-5: X-RAY → LOCKPICK ∥ TROJAN → DEPUTY ∥ SMUGGLER → CUSTOMS → WATCHTOWER
+    Sk-->>R: findings/*.json (+ negative results = defenses proven working)
+    M->>M: dedupe → grade A–F → per-control scores
+    M-->>You: report.md · grade.json · "Fix this first: 1, 2, 3"
+    Note over You,M: Later: sentinel retest → re-probes failures only,<br/>closes findings with proof
+```
+
+Every skill is also **runnable by hand** (or by an AI agent following `AGENTS.md`) — the orchestrator is a convenience, not a cage.
+
+---
+
+## 🧪 The 10 skills — and what each catches
+
+| Codename | Skill | Discipline | Catches | Offline |
+|---|---|---|---|---|
+| 🧭 **MARSHAL** | [`sentinel-assessor`](skills/sentinel-assessor/SKILL.md) | Orchestrator | — (coordinates everything) | ✅ |
+| 🔍 **PROSPECTOR** | [`audit-codebase`](skills/audit-codebase/SKILL.md) | Code audit | Secrets, config poisoning, output sinks, slopsquats, pickle weights, MCP flaws — in source, any language | ✅ 100% |
+| 🕵️ **X-RAY** | [`introspect-leakage`](skills/introspect-leakage/SKILL.md) | Introspection | System-prompt extraction, secrets in prompts, PII regurgitation | ✅ |
+| 🗄️ **ARCHIVIST** | [`introspect-memory-rag`](skills/introspect-memory-rag/SKILL.md) | Introspection | RAG poisoning, memory implants that *persist across sessions* | ✅ |
+| ⚔️ **LOCKPICK** | [`redteam-jailbreak`](skills/redteam-jailbreak/SKILL.md) | Red team | Roleplay, multi-turn Crescendo, Bad Likert Judge, encoding bypasses | ✅ |
+| 🐴 **TROJAN** | [`redteam-injection`](skills/redteam-injection/SKILL.md) | Red team | Direct/indirect injection (EchoLeak-pattern chains), approval bypass | ✅ |
+| 👤 **DEPUTY** | [`pentest-toolchain`](skills/pentest-toolchain/SKILL.md) | Penetration | Confused deputy, over-privilege tools, approval theater | ✅ |
+| 📤 **SMUGGLER** | [`pentest-egress`](skills/pentest-egress/SKILL.md) | Penetration | Zero-click exfil, tool egress abuse, denial-of-wallet | ✅ |
+| 🚢 **CUSTOMS** | [`pentest-supply-chain`](skills/pentest-supply-chain/SKILL.md) | Penetration | Unpinned/unsigned models, MCP tool poisoning, slopsquatting | ✅ |
+| 📡 **WATCHTOWER** | [`audit-ops`](skills/audit-ops/SKILL.md) | Audit | "Would your SOC have seen it?" — detection replay, IR readiness | ✅ |
+
+For **AI agent harnesses**: [`skills/manifest.json`](skills/manifest.json) (machine-readable index) + [`AGENTS.md`](AGENTS.md) (execution rules).
+
+---
+
+## 🎓 Grading: A → F
+
+From [`skills/_shared/conventions.md`](skills/_shared/conventions.md) §4 — deterministic, no vibes:
+
+| Grade | Means |
+|---|---|
+| **A** | All tested controls pass; negative results recorded (defenses proven working) |
+| **B** | Minor findings only; no high/critical open |
+| **C** | High findings open, or ≥3 mediums |
+| **D** | Multiple highs / Level-0 (C01–C05) failures |
+| **F** | Any critical — canary left the lab, RCE path, live secret |
+
+Per-control score: `pass · partial · fail · not-tested` — so "not tested yet" is always visible, never hidden behind an average.
+
+---
+
+## ✅ Coverage so far
+
+| Domain | Covered by | Status |
+|---|---|---|
+| Prompt injection (direct/indirect/multimodal) | TROJAN, PROSPECTOR CA-3/CA-4 | ✅ playbook |
+| Jailbreaks / safety bypass | LOCKPICK (7 families) | ✅ playbook |
+| System-prompt & data leakage | X-RAY, PROSPECTOR CA-1 | ✅ playbook |
+| RAG & memory poisoning | ARCHIVIST | ✅ playbook |
+| Excessive agency / confused deputy | DEPUTY | ✅ playbook |
+| Exfiltration & egress | SMUGGLER | ✅ playbook |
+| Supply chain (models, MCP, packages) | CUSTOMS, PROSPECTOR CA-5/CA-6/CA-7 | ✅ playbook |
+| Denial of wallet / unbounded consumption | SMUGGLER SE-6 | ✅ playbook |
+| Static codebase audit (any language) | PROSPECTOR (9 check families) | ✅ playbook |
+| Detection, IR, governance | WATCHTOWER, C17–C20 | ✅ playbook |
+| **Runnable `sentinel` CLI** | ROADMAP M4 | 🚧 next up |
+| Probe automation + Inspect-compatible evals | ROADMAP M4 | 🚧 planned |
+| Docs site + reference case study | ROADMAP M5 | 📋 planned |
+
+**Standards mapped:** OWASP LLM Top 10 (2025) · OWASP Agentic Top 10 (2026) · MITRE ATLAS · NIST AI RMF 1.0 + GenAI Profile · ISO/IEC 42001 · EU AI Act GPAI · UK AISI Inspect · CSA MAESTRO — full citations in [`docs/RESEARCH.md`](docs/RESEARCH.md).
+
+---
+
+## 🛡️ Why nothing here can hurt anyone
+
+```mermaid
+flowchart LR
+    subgraph REPO["📦 This repo contains"]
+        P1["Testing playbooks<br/>(metaprompt-style probes)"]
+        P2["Canary strings only<br/>SENTINEL-CANARY-*"]
+        P3["Fixes, checklists,<br/>detection rules"]
+    end
+    subgraph N={"❌ What it will never contain"}
+        N1["Exploit code"]
+        N2["Target discovery / attack automation"]
+        N3["Telemetry / phone-home"]
+    end
+    REPO --> Q{"Could anything here<br/>attack someone else?"}
+    Q -->|"No — by design"| V["✅ Safe to adopt, host, and fork"]
+    style N fill:#8b1c1c,color:#fff
+    style V fill:#1a5f2a,color:#fff
+```
+
+The [Defender Charter](SAFETY.md) is binding: offline by default · data never leaves your disk · your-own-systems only · offensive-capability PRs declined. **One-line test:** *if this repo vanished tomorrow, could anything in it attack someone?* No.
+
+---
+
+## 📂 Repository map
+
+```
+├── README.md                 ← you are here
+├── SAFETY.md                 the binding Defender Charter
+├── AGENTS.md                 instructions for AI agent harnesses
+├── LICENSE                   MIT
+├── docs/
+│   ├── RESEARCH.md           evidence base (all cited)
+│   ├── GUIDELINES.md         the 20 controls + code-audit appendix
+│   ├── BLUEPRINT.md          final report: architecture, worked example, safety
+│   └── ROADMAP.md            v0.1 → v1.0
+└── skills/
+    ├── manifest.json         machine-readable skill index for agents
+    ├── README.md             suite index + workflow
+    ├── _shared/conventions.md  finding schema · canaries · RoE · grading
+    └── <10 skill folders>/   SKILL.md playbooks (+ per-language tables for PROSPECTOR)
+```
+
+## 🧭 Start here
+
+1. New to LLM security? → [`docs/GUIDELINES.md`](docs/GUIDELINES.md) (20 controls, Level 0 = one day)
+2. Want to test *your* repo right now? → [PROSPECTOR](skills/audit-codebase/SKILL.md) (static, offline)
+3. Building an agent harness? → [`skills/manifest.json`](skills/manifest.json) + [`AGENTS.md`](AGENTS.md)
+4. Want the full story? → [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md)
+
+## 📄 License
+
+MIT — see [LICENSE](LICENSE). Be a defender. 🛡️
