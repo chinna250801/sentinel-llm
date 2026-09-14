@@ -1,0 +1,43 @@
+# --- Sentinel-LLM: never publish run artifacts or local state ---
+runs/
+findings/
+*.sentinel-run/
+sentinel-state/
+
+# Evidence / reports generated during engagements
+*.report.md
+findings-*.json
+grade.json
+
+# --- Secrets & environment (defense starts at home) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# --- OS / editor noise ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# --- Language/tooling caches (future CLI work) ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+node_modules/
+dist/
+build/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# --- Temporary scratch ---
+tmp/
+scratch/
