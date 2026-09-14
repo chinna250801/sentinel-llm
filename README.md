@@ -156,6 +156,48 @@ sequenceDiagram
 
 Every skill is also **runnable by hand** (or by an AI agent following `AGENTS.md`) — the orchestrator is a convenience, not a cage.
 
+### 🤖 No CLI? Just tell your agent.
+
+Any agent harness (Claude Code, Cursor, your own) can load skills straight from [`skills/manifest.json`](skills/manifest.json) — paste a prompt, watch it work:
+
+```text
+┌────────────────────────────────────────────────────────────────┐
+│ 💬  Your agent — live window                                    │
+├────────────────────────────────────────────────────────────────┤
+│ You: Load PROSPECTOR from skills/manifest.json and audit        │
+│      this repo. Grade it. Show my fix list.                     │
+│                                                                 │
+│ 🤖: Reading manifest… skill → audit-codebase (offline ✓)        │
+│     ▸ CA-1 secrets ........ 2 findings (1 LIVE key 🔴)          │
+│     ▸ CA-4 output sinks ... completion → os.system 🔴           │
+│     ▸ CA-5 deps .......... 'fastcsv2' doesn't exist 🟠          │
+│     Grade: C — Fix first: rotate the key, then C04 sink         │
+├────────────────────────────────────────────────────────────────┤
+│ You: Load X-RAY + LOCKPICK and test my chat app on              │
+│      localhost:8080. Canaries only.                             │
+│                                                                 │
+│ 🤖: RoE: local target ✓ · sink 127.0.0.1:8765 ✓                 │
+│     ▸ system prompt extracted (11 turns) → F-003                │
+│     ▸ Crescendo bypass by turn 4 → F-014 · 3 defenses held ✓    │
+├────────────────────────────────────────────────────────────────┤
+│ You: AGENTS.md, full preset, my RAG service — and clean         │
+│      up every artifact afterwards. Prove the cleanup.           │
+│                                                                 │
+│ 🤖: ARCHIVIST + TROJAN running… canary docs planted…            │
+│     implant persisted across sessions 🔴 → F-009                │
+│     Cleanup checklist: 6/6 ✅ corpus + memory restored          │
+└────────────────────────────────────────────────────────────────┘
+```
+
+| Paste this to your agent | It runs | You get |
+|---|---|---|
+| "Audit this repo, grade it, fix list" | PROSPECTOR | Static findings + grade (offline) |
+| "Test my chat app / RAG / agent" | X-RAY, LOCKPICK, ARCHIVIST, TROJAN… | Live findings, canary-only |
+| "Full review, then clean up and prove it" | MARSHAL preset `full` | Graded report + verified cleanup |
+| "Retest — did my fixes work?" | `retest` logic | Findings close **only with proof** |
+
+> The rules that make this safe live in [`AGENTS.md`](AGENTS.md): charter first, canaries only, your sink only, RoE gate, cleanup proven. Agents follow them; so should you.
+
 ---
 
 ## 🧪 The 10 skills — and what each catches
